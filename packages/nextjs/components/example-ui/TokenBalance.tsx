@@ -52,7 +52,7 @@ export const TokenBalance = () => {
         <div className="stats">
           <div className="stat">
             <div className="stat-title">Your Balance</div>
-            <div className="stat-value text-primary">
+            <div className="stat-value text-white">
               {tokenBalance ? (Number(tokenBalance) / 1e18).toFixed(4) : "0.0000"}
             </div>
             <div className="stat-desc">{tokenSymbol}</div>
