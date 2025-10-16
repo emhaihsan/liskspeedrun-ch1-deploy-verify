@@ -1,103 +1,151 @@
-# Lisk SpeedRun Challenge - Deploy & Verify Smart Contracts
+# Lisk SpeedRun Challenge 2: Connect Your Contracts to Frontend
 
-This repository is my submission for the Lisk SpeedRun Challenge 1: Deploy & Verify Your First Contracts.
+This repository is my submission for Lisk SpeedRun Challenge 2, where I connected my ERC20 and ERC721 smart contracts from Week 1 to a React/Next.js frontend with wallet integration.
 
-## Overview
+## Challenge Overview
 
-In this challenge, I've deployed and verified ERC20 and ERC721 smart contracts on the Lisk Sepolia testnet. The project demonstrates:
+In this challenge, I have:
 
-- Compiling and deploying ERC20 token and ERC721 NFT contracts
-- Using modern Solidity best practices
-- Interacting with contracts through a NextJS frontend
-- Verifying contracts on Lisk Blockscout
+- Connected my Week 1 smart contracts to a React/Next.js frontend
+- Implemented wallet integration (using Rabby Wallet)
+- Created components to display token balances and NFTs
+- Added token transfer and NFT minting functionality
+- Deployed the frontend to Vercel
 
 ## My Submission
 
 **Deployed Contracts:**
 
-- ERC20 Token (MyToken): 0x6EbBEc01EC7ec9edcF9103aec2E251325A1c330B
-- ERC721 NFT (MyNFT): 0x14636FAAe3a2F34D7e1b6fC0CEd6343FB3473532
+- ERC20 Token (MyToken): `0x6EbBEc01EC7ec9edcF9103aec2E251325A1c330B`
+- ERC721 NFT (MyNFT): `0x14636FAAe3a2F34D7e1b6fC0CEd6343FB3473532`
 
-## Project Structure
+**Frontend URL:** [https://liskspeedrun-challenges-nextjs.vercel.app/](https://liskspeedrun-challenges-nextjs.vercel.app/)
 
-This project is built using Scaffold-Lisk, a fork of Scaffold-OP with additional dApp examples and native support for Superchain testnets.
+## Key Features
 
-### Key Features
+The application has three main components:
 
-- ✅ **Contract Hot Reload**: Frontend auto-adapts to smart contract changes
-- 🪝 **Custom hooks**: React hooks wrapper around wagmi for simplified smart contract interactions
-- 🧱 **Components**: Collection of common web3 components for frontend development
-- 🔥 **Burner Wallet & Local Faucet**: For quick testing
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers
+1. **TokenBalance**: Displays the user's token balance and token information
+2. **TokenTransfer**: Allows users to transfer tokens to other addresses
+3. **NFTCollection**: Shows NFT collection details and enables minting
 
-## Requirements
+## Technologies Used
 
-Before you begin, you need to install the following tools:
+- **Frontend**: React, Next.js, TailwindCSS
+- **Web3**: Wagmi, RainbowKit, Viem
+- **Smart Contract**: Solidity (from Week 1)
+- **Deployment**: Vercel
 
-- [Node (>= v18.17)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
+## How to Run the Project Locally
 
-## Getting Started
+1. Clone the repository
 
-1. Clone this repo & install dependencies
+   ```bash
+   git clone https://github.com/yourusername/lisk-speedrun-challenge.git
+   cd lisk-speedrun-challenge
+   ```
 
-```bash
-git clone https://github.com/emhaihsan/liskspeedrun-ch1-deploy-verify.git
-cd liskspeedrun-ch1-deploy-verify
-yarn install
+2. Install dependencies
+
+   ```bash
+   yarn install
+   ```
+
+3. Run the development server
+
+   ```bash
+   yarn start
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) to view the application
+
+## Component Structure
+
+### TokenBalance Component
+
+This component displays the user's token balance and token metadata (name and symbol):
+
+```tsx
+const { data: tokenBalance } = useScaffoldContractRead({
+  contractName: "MyToken",
+  functionName: "balanceOf",
+  args: [connectedAddress],
+});
+
+// Display balance in a readable format
+{
+  tokenBalance ? (Number(tokenBalance) / 1e18).toFixed(4) : "0.0000";
+}
 ```
 
-2. Run a local network in the first terminal:
+### TokenTransfer Component
 
-```bash
-yarn chain
+This component allows users to transfer tokens to other addresses:
+
+```tsx
+const { writeAsync: writeMyTokenAsync } = useScaffoldContractWrite({
+  contractName: "MyToken",
+  functionName: "transfer",
+});
+
+// Send transaction
+await writeMyTokenAsync({
+  args: [recipient, parseEther(amount)],
+});
 ```
 
-3. On a second terminal, deploy the contracts:
+### NFTCollection Component
 
-```bash
-yarn deploy
+This component displays NFT collection information and enables minting:
+
+```tsx
+const { data: totalSupply } = useScaffoldContractRead({
+  contractName: "MyNFT",
+  functionName: "totalSupply",
+});
+
+const { writeAsync: writeMyNFTAsync } = useScaffoldContractWrite({
+  contractName: "MyNFT",
+  functionName: "mint",
+});
 ```
 
-4. On the same terminal, start your NextJS app:
+## Performance Optimizations
 
-```bash
-yarn start
+The components implement several performance optimizations:
+
+- **Minimize Re-renders**:
+
+  ```tsx
+  // ✅ Good: Specific hooks for each data point
+  const { data: tokenName } = useScaffoldContractRead({
+    contractName: "MyToken",
+    functionName: "name",
+  });
+  ```
+
+- **Handle Loading States**:
+  ```tsx
+  if (isLoading) return <div className="loading loading-spinner"></div>;
+  ```
+
+## Network Configuration
+
+The application is configured to connect directly to Lisk Sepolia when first loaded:
+
+```typescript
+// scaffold.config.ts
+const scaffoldConfig = {
+  targetNetwork: liskSepolia,
+  targetNetworks: [liskSepolia],
+};
+
+// wagmi-config.tsx
+export const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors,
+  publicClient,
+  webSocketPublicClient,
+  initialChain: liskSepolia,
+});
 ```
-
-Visit your app on: `http://localhost:3000`
-
-## Deploying to Lisk Sepolia Testnet
-
-1. Set up your environment by copying `.env.example` to `.env` in the packages/hardhat directory
-
-2. Add your private key to the `.env` file:
-
-```
-DEPLOYER_PRIVATE_KEY = "your_private_key_with_sepolia_ETH"
-```
-
-3. Deploy your contracts to Lisk Sepolia:
-
-```bash
-yarn deploy --network liskSepolia
-```
-
-4. Verify your contracts:
-
-```bash
-yarn hardhat-verify --network liskSepolia --contract contracts/MyToken.sol:MyToken YOUR_TOKEN_ADDRESS
-yarn hardhat-verify --network liskSepolia --contract contracts/MyNFT.sol:MyNFT YOUR_NFT_ADDRESS
-```
-
-## Challenge Details
-
-This submission is part of the Lisk SpeedRun Challenge, which involves:
-
-1. Creating ERC20 and ERC721 smart contracts
-2. Deploying them to Lisk Sepolia testnet
-3. Verifying the contracts on Lisk Blockscout
-4. Building a frontend that interacts with these contracts
-
-For more information about the challenge, visit [SpeedRunLisk.xyz](https://SpeedRunLisk.xyz).
