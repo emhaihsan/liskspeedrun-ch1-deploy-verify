@@ -1,15 +1,17 @@
-# Lisk SpeedRun Challenge 2: Connect Your Contracts to Frontend
+# Lisk SpeedRun Challenge 3: Display Contract Events & Transaction History
 
-This repository is my submission for Lisk SpeedRun Challenge 2, where I connected my ERC20 and ERC721 smart contracts from Week 1 to a React/Next.js frontend with wallet integration.
+This repository is my submission for Lisk SpeedRun Challenge 3, where I've added contract event tracking and transaction history to my Week 1 & 2 project.
 
 ## Challenge Overview
 
-In this challenge, I have:
+Building on previous challenges, I have:
 
-- Connected my Week 1 smart contracts to a React/Next.js frontend
-- Implemented wallet integration (using Rabby Wallet)
-- Created components to display token balances and NFTs
-- Added token transfer and NFT minting functionality
+- Connected my Week 1 smart contracts to a React/Next.js frontend (Week 2)
+- Implemented wallet integration using Rabby Wallet (Week 2)
+- Created components to display token balances and NFTs (Week 2)
+- Added token transfer and NFT minting functionality (Week 2)
+- **NEW**: Added contract events tracking and transaction history (Week 3)
+- **NEW**: Implemented filtering between token and NFT events (Week 3)
 - Deployed the frontend to Vercel
 
 ## My Submission
@@ -23,11 +25,12 @@ In this challenge, I have:
 
 ## Key Features
 
-The application has three main components:
+The application has four main components:
 
 1. **TokenBalance**: Displays the user's token balance and token information
 2. **TokenTransfer**: Allows users to transfer tokens to other addresses
 3. **NFTCollection**: Shows NFT collection details and enables minting
+4. **NEW - Events Page**: Displays contract events and transaction history
 
 ## Technologies Used
 
@@ -109,6 +112,35 @@ const { writeAsync: writeMyNFTAsync } = useScaffoldContractWrite({
   functionName: "mint",
 });
 ```
+
+### NEW - Events Component
+
+This component displays contract events and transaction history:
+
+```tsx
+// Get token transfer events
+const { data: tokenEvents, isLoading: tokenLoading } = useScaffoldEventHistory({
+  contractName: "MyToken",
+  eventName: "Transfer",
+  fromBlock: 0n,
+  watch: true,
+});
+
+// Get NFT transfer events
+const { data: nftEvents, isLoading: nftLoading } = useScaffoldEventHistory({
+  contractName: "MyNFT",
+  eventName: "Transfer",
+  fromBlock: 0n,
+  watch: true,
+});
+```
+
+The events page includes:
+
+- Tabs to switch between token and NFT events
+- Transaction details including sender, recipient, and amount/token ID
+- Links to view transactions on the Lisk Sepolia block explorer
+- Real-time updates when new events occur
 
 ## Performance Optimizations
 
