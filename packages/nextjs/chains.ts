@@ -8,7 +8,7 @@ export const liskSepolia = defineChainViem({
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
     default: {
-      http: ["https://rpc.sepolia-api.lisk.com"],
+      http: [process.env.NEXT_PUBLIC_LISK_SEPOLIA_RPC || "https://rpc.sepolia-api.lisk.com"],
     },
     public: {
       http: ["https://rpc.sepolia-api.lisk.com"],
@@ -35,7 +35,7 @@ export const liskSepoliaThirdweb = defineChainThirdweb({
     symbol: "ETH",
     decimals: 18,
   },
-  rpc: "https://rpc.sepolia-api.lisk.com",
+  rpc: process.env.NEXT_PUBLIC_LISK_SEPOLIA_RPC || "https://rpc.sepolia-api.lisk.com",
   blockExplorers: [
     {
       name: "Blockscout",
