@@ -16,7 +16,7 @@ export const TokenBalance = () => {
   const { data: tokenBalance, isLoading: balanceLoading } = useScaffoldContractRead({
     contractName: "MyToken",
     functionName: "balanceOf",
-    args: [connectedAddress], // Pass user's address as argument
+    args: [connectedAddress as `0x${string}`], // Pass user's address as argument
   });
 
   // 3. Read token metadata (name & symbol)

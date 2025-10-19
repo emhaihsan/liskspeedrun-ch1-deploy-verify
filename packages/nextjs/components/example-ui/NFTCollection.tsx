@@ -28,13 +28,13 @@ export const NFTCollection = () => {
   const { data: userBalance, isLoading: balanceLoading } = useScaffoldContractRead({
     contractName: "MyNFT",
     functionName: "balanceOf",
-    args: [connectedAddress],
+    args: [connectedAddress as `0x${string}`],
   });
 
   const { writeAsync: writeMyNFTAsync } = useScaffoldContractWrite({
     contractName: "MyNFT",
     functionName: "mint",
-    args: [mintToAddress || connectedAddress],
+    args: [(mintToAddress || connectedAddress) as `0x${string}`],
   });
 
   const isLoading = nameLoading || symbolLoading || supplyLoading || balanceLoading;
@@ -49,7 +49,7 @@ export const NFTCollection = () => {
 
     try {
       await writeMyNFTAsync({
-        args: [targetAddress],
+        args: [targetAddress as `0x${string}`],
       });
 
       notification.success("NFT minted successfully!");
