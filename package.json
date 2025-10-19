@@ -41,5 +41,10 @@
   },
   "dependencies": {
     "tailwind-merge": "^2.4.0"
+  },
+  "resolutions": {
+    "@typescript-eslint/parser": "^6.0.0",
+    "@types/node": "^20.0.0",
+    "fastestsmallesttextencoderdecoder": "^1.0.22"
   }
 }
