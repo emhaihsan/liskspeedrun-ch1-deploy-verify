@@ -1,10 +1,10 @@
 # Lisk SpeedRun Challenges: Full Stack Web3 Development
 
-This repository contains my submissions for Lisk SpeedRun Challenges 1-4, building a complete Web3 application with smart contracts, frontend, events tracking, oracles, and gasless transactions.
+This repository contains my submissions for Lisk SpeedRun Challenges 1-5, building a complete Web3 application with smart contracts, frontend, events tracking, oracles, gasless transactions, and an NFT marketplace.
 
 ## Challenge Overview
 
-Building progressively through four weeks, I have:
+Building progressively through five weeks, I have:
 
 ### Week 1: Smart Contract Development
 
@@ -28,11 +28,20 @@ Building progressively through four weeks, I have:
 
 ### Week 4: Oracles & Gasless Transactions
 
-- **NEW**: Integrated RedStone oracle for live price feeds (ETH/BTC)
-- **NEW**: Implemented ERC-4337 Account Abstraction with Smart Wallets
-- **NEW**: Added gasless NFT minting using thirdweb paymaster
-- **NEW**: Built oracle price display component with auto-refresh
+- Integrated RedStone oracle for live price feeds (ETH/BTC)
+- Implemented ERC-4337 Account Abstraction with Smart Wallets
+- Added gasless NFT minting using thirdweb paymaster
+- Built oracle price display component with auto-refresh
 - Deployed complete dApp to Vercel
+
+### Week 5: NFT Marketplace (NEW!)
+
+- **NEW**: Built fully functional NFT marketplace with escrowless design
+- **NEW**: Implemented list, buy, and cancel listing functionality
+- **NEW**: Integrated ERC721 approval mechanisms (setApprovalForAll)
+- **NEW**: Added oracle-powered USD price display for NFT listings
+- **NEW**: Created marketplace grid UI with real-time updates
+- **NEW**: Deployed NFTMarketplace contract to Lisk Sepolia
 
 ## My Submission
 
@@ -41,8 +50,11 @@ Building progressively through four weeks, I have:
 - ERC20 Token (MyToken): `0x6EbBEc01EC7ec9edcF9103aec2E251325A1c330B`
 - ERC721 NFT (MyNFT): `0x14636FAAe3a2F34D7e1b6fC0CEd6343FB3473532`
 - PriceFeed Oracle (Week 4): `0xe522477aAa26cfE59eA375B6CF3f0327a88f59da`
+- NFTMarketplace (Week 5): `0x0df49C120FbABc988a45D70476Cd10cB9592f1fb`
 
 **Frontend URL:** [https://liskspeedrun-challenges-nextjs.vercel.app/](https://liskspeedrun-challenges-nextjs.vercel.app/)
+
+**Marketplace URL:** [https://liskspeedrun-challenges-nextjs.vercel.app/marketplace](https://liskspeedrun-challenges-nextjs.vercel.app/marketplace)
 
 ## Key Features
 
@@ -73,6 +85,26 @@ The application includes multiple pages and components:
    - No gas fees required for users
    - Transaction history on Blockscout
 
+### Week 5 Features (NEW!)
+
+7. **NFT Marketplace Page** (`/marketplace`): Full-featured NFT marketplace
+
+   - **Escrowless Design**: NFTs stay in seller's wallet until sold
+   - **List NFTs**: Approve marketplace and list NFTs with custom ETH prices
+   - **Buy NFTs**: Purchase listed NFTs with one-click transactions
+   - **Cancel Listings**: Sellers can cancel listings anytime
+   - **Oracle Integration**: Real-time USD price display for all listings
+   - **Smart Approval Flow**: Loading states prevent "not approved" errors
+   - **Grid Layout**: Beautiful responsive card-based UI
+   - **Real-time Updates**: Automatic refresh after transactions
+
+8. **NFTCard Component**: Individual NFT card with full marketplace functionality
+   - Dynamic button states (Approve → List → Buy/Cancel)
+   - ERC721 approval checking (approve + isApprovedForAll)
+   - Price input modal with live USD conversion
+   - Transaction notifications and error handling
+   - Owner/buyer role detection
+
 ## Technologies Used
 
 ### Core Stack
@@ -91,6 +123,16 @@ The application includes multiple pages and components:
   - Smart Wallet creation and management
   - Paymaster-sponsored gasless transactions
   - Bundler infrastructure
+
+### Week 5 Additions
+
+- **NFT Marketplace**: Escrowless marketplace architecture
+  - OpenZeppelin ERC721 interfaces (IERC721)
+  - ReentrancyGuard for security
+  - Checks-Effects-Interactions pattern
+  - Low-level call for ETH transfers
+- **Advanced State Management**: Loading states and approval tracking
+- **Oracle Price Display**: Real-time USD conversion for NFT prices
 
 ## How to Run the Project Locally
 
@@ -113,9 +155,11 @@ The application includes multiple pages and components:
 
    ```env
    NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
+   NEXT_PUBLIC_LISK_SEPOLIA_RPC=https://rpc.sepolia-api.lisk.com/your_api_key
    ```
 
-   Get your thirdweb Client ID from [thirdweb.com](https://thirdweb.com/dashboard/settings/api-keys)
+   - Get your thirdweb Client ID from [thirdweb.com](https://thirdweb.com/dashboard/settings/api-keys)
+   - Get your Lisk Sepolia RPC API key from [Gelato RaaS](https://raas.gelato.network/rpc) (optional, for higher rate limits)
 
 4. Run the development server
 
@@ -131,6 +175,7 @@ The application includes multiple pages and components:
 - `/events` - Contract events and transaction history
 - `/oracle` - Live price feeds (ETH/BTC)
 - `/gasless` - Gasless NFT minting with Smart Wallets
+- `/marketplace` - NFT marketplace with buy/sell functionality (Week 5)
 
 ## Component Structure
 
@@ -273,6 +318,104 @@ Features:
 - Real-time balance updates
 - Transaction links to Blockscout
 
+### NFTMarketplace & NFTCard Components (Week 5 - NEW!)
+
+The marketplace consists of two main components working together:
+
+**NFTMarketplace Contract:**
+
+```solidity
+contract NFTMarketplace is ReentrancyGuard {
+    struct Listing {
+        address seller;
+        uint256 price;
+        bool isActive;
+    }
+
+    IERC721 public nftContract;
+    mapping(uint256 => Listing) public listings;
+
+    function listItem(uint256 tokenId, uint256 price) external;
+    function buyItem(uint256 tokenId) external payable nonReentrant;
+    function cancelListing(uint256 tokenId) external;
+}
+```
+
+**NFTCard Component:**
+
+```tsx
+// Check approval status (both methods)
+const { data: approvedAddress } = useScaffoldContractRead({
+  contractName: "MyNFT",
+  functionName: "getApproved",
+  args: [BigInt(tokenId)],
+});
+
+const { data: isApprovedForAll } = useScaffoldContractRead({
+  contractName: "MyNFT",
+  functionName: "isApprovedForAll",
+  args: [owner, marketplaceAddress],
+});
+
+// Approve marketplace for all NFTs
+const { writeAsync: approveMarketplace } = useScaffoldContractWrite({
+  contractName: "MyNFT",
+  functionName: "setApprovalForAll",
+  args: [marketplaceAddress, true],
+  onBlockConfirmation: async () => {
+    await refetchApproved();
+    setIsApproving(false);
+  },
+});
+
+// List NFT for sale
+const { writeAsync: listItem } = useScaffoldContractWrite({
+  contractName: "NFTMarketplace",
+  functionName: "listItem",
+  args: [BigInt(tokenId), parseEther(listPrice)],
+});
+
+// Buy listed NFT
+const { writeAsync: buyItem } = useScaffoldContractWrite({
+  contractName: "NFTMarketplace",
+  functionName: "buyItem",
+  args: [BigInt(tokenId)],
+  value: listing.price,
+});
+```
+
+**Key Features:**
+
+- **Escrowless Design**: NFTs remain in seller's wallet until purchased
+- **Approval Flow**: Uses `setApprovalForAll` for one-time marketplace approval
+- **Loading States**: `isApproving` state prevents "not approved" race conditions
+- **Oracle Integration**: Fetches ETH price and displays USD equivalent
+- **Dynamic UI**: Buttons change based on ownership and listing status
+- **Security**: ReentrancyGuard, Checks-Effects-Interactions pattern
+
+**Transaction Flow:**
+
+1. **Seller**: Approve Marketplace → List NFT with price → Wait for buyer
+2. **Buyer**: Click "Buy Now" → NFT transferred + ETH sent to seller
+3. **Seller**: Can cancel listing anytime before sale
+
+**USD Price Display:**
+
+```tsx
+// Fetch ETH price from oracle
+const fetchEthPrice = async () => {
+  const wrappedContract = WrapperBuilder.wrap(contract).usingDataService({
+    dataPackagesIds: ["ETH"],
+    authorizedSigners: getSignersForDataServiceId("redstone-main-demo"),
+  });
+  const priceData = await wrappedContract.getEthPrice();
+  setEthPriceUSD(Number(priceData) / 1e8);
+};
+
+// Calculate USD value
+const priceInUSD = (parseFloat(priceInEth) * ethPriceUSD).toFixed(2);
+```
+
 ## Performance Optimizations
 
 The components implement several performance optimizations:
@@ -364,21 +507,35 @@ export const wagmiConfig = createConfig({
 });
 ```
 
-### Week 4: Dual Chain Configuration
+### Week 4-5: Dual Chain Configuration & Custom RPC
 
-For Week 4, we added thirdweb's chain configuration alongside wagmi:
+For Week 4-5, we added thirdweb's chain configuration alongside wagmi and custom RPC provider:
 
 ```typescript
 // chains.ts - thirdweb configuration
 export const liskSepoliaThirdweb = defineChain({
   id: 4202,
   name: "Lisk Sepolia",
-  rpc: "https://rpc.sepolia-api.lisk.com",
-  // ... other config
+  rpc:
+    process.env.NEXT_PUBLIC_LISK_SEPOLIA_RPC ||
+    "https://rpc.sepolia-api.lisk.com",
 });
 
-// Used specifically for Smart Wallet and gasless transactions
+// wagmiConnectors.tsx - Custom RPC provider for higher rate limits
+export const appChains = configureChains(enabledChains, [
+  jsonRpcProvider({
+    rpc: (chain) => {
+      if (chain.id === 4202 && process.env.NEXT_PUBLIC_LISK_SEPOLIA_RPC) {
+        return { http: process.env.NEXT_PUBLIC_LISK_SEPOLIA_RPC };
+      }
+      return null;
+    },
+  }),
+  publicProvider(),
+]);
 ```
+
+This configuration prioritizes custom RPC with API key to avoid rate limiting issues on the marketplace.
 
 ## What I Learned
 
@@ -404,6 +561,16 @@ export const liskSepoliaThirdweb = defineChain({
 - **Hybrid Library Approach**: Using ethers.js + viem together
 - **ERC-4337 Standard**: Understanding UserOperations, bundlers, and paymasters
 
+### Week 5: NFT Marketplace
+
+- **Marketplace Architecture**: Escrowless design patterns for NFT trading
+- **ERC721 Approvals**: Deep understanding of `approve()` vs `setApprovalForAll()`
+- **Smart Contract Security**: ReentrancyGuard, Checks-Effects-Interactions pattern
+- **State Management**: Loading states to prevent race conditions
+- **Oracle Integration**: Real-time USD price conversion for listings
+- **Event-Driven UI**: Using contract events for real-time marketplace updates
+- **Production Patterns**: Building production-ready marketplace interfaces
+
 ## Deployment
 
 ### Smart Contracts (Lisk Sepolia)
@@ -426,19 +593,26 @@ Key configuration files for deployment:
 - `.yarnrc.yml` - Yarn 3 configuration with log filters for CI/CD
 - `package.json` - Resolutions for peer dependency compatibility
 - `.eslintrc.json` - ESLint rules with disabled strict checks for rapid development
-- `.env.local` - Environment variables (thirdweb Client ID)
+- `.env.local` - Environment variables (thirdweb Client ID, custom RPC URL)
 
 ## Acknowledgments
 
-Built as part of the [Lisk SpeedRun Challenges](https://lisk.com) - a comprehensive Web3 development learning path.
+Built as part of the [Lisk SpeedRun Challenges](https://lisk.com) - a comprehensive Web3 development learning path covering 5 weeks of full-stack Web3 development.
 
 **Technologies & Services:**
 
 - [Scaffold-ETH 2](https://scaffoldeth.io) - Full-stack Ethereum development framework
-- [RedStone Finance](https://redstone.finance) - Decentralized oracle network
+- [OpenZeppelin](https://openzeppelin.com) - Secure smart contract libraries (ERC20, ERC721, ReentrancyGuard)
+- [RedStone Finance](https://redstone.finance) - Decentralized oracle network for price feeds
 - [thirdweb](https://thirdweb.com) - Web3 development platform with ERC-4337 infrastructure
 - [Lisk](https://lisk.com) - Ethereum L2 blockchain
 - [Vercel](https://vercel.com) - Frontend deployment platform
+- [Gelato RaaS](https://raas.gelato.network) - RPC infrastructure for Lisk Sepolia
+
+**Special Thanks:**
+
+- @LiskSEA community for support and guidance
+- Lisk SpeedRun Challenge organizers for the comprehensive curriculum
 
 ## License
 
